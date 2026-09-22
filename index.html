@@ -127,6 +127,35 @@
   }
   .quick-add-btn:active{transform:translateX(-50%) scale(0.95);}
 
+  /* ---------- PWAインストール案内バナー ---------- */
+  .install-banner{
+    position:fixed;left:12px;right:12px;
+    bottom:calc(86px + var(--safe-bottom));
+    z-index:300;
+    background:#161616;color:#fff;
+    border-radius:16px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 12px 12px 16px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);
+    transform:translateY(140%);opacity:0;
+    transition:transform .35s ease, opacity .35s ease;
+  }
+  .install-banner[hidden]{display:none;}
+  .install-banner.show{transform:translateY(0);opacity:1;}
+  .install-banner-text{font-weight:800;font-size:.82rem;flex:1;line-height:1.4;}
+  .install-banner-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+  .install-btn{
+    min-height:44px;padding:0 16px;border:none;border-radius:10px;
+    background:var(--accent);color:#fff;font-weight:900;cursor:pointer;font-size:.85rem;white-space:nowrap;
+  }
+  .install-close{
+    width:44px;height:44px;border:none;border-radius:10px;
+    background:rgba(255,255,255,0.15);color:#fff;font-size:1.1rem;font-weight:900;cursor:pointer;flex:0 0 auto;
+  }
+  @media (min-width:520px){
+    .install-banner{left:auto;right:20px;bottom:calc(90px + var(--safe-bottom));max-width:360px;}
+  }
+
   /* ---------- MODALS ---------- */
   .modal-overlay{
     position:fixed;inset:0;background:rgba(0,0,0,0.55);
@@ -193,7 +222,6 @@
   .mini-cal-grid .day .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:2px;}
   .mini-cal-grid .day.selected .dot{background:#fff;}
 
-  .reminder-select-row{display:flex;gap:8px;flex-wrap:wrap;}
   .primary-btn{
     width:100%;padding:14px;margin-top:16px;min-height:48px;
     border:none;border-radius:12px;background:var(--accent);color:#fff;font-weight:900;font-size:1.05rem;cursor:pointer;
@@ -201,9 +229,6 @@
   .secondary-btn{
     width:100%;padding:12px;margin-top:8px;min-height:44px;
     border:2px solid #ddd;border-radius:12px;background:#fff;color:#333;font-weight:800;cursor:pointer;
-  }
-  .danger-btn{
-    padding:10px 14px;min-height:40px;border:none;border-radius:10px;background:#c62828;color:#fff;font-weight:800;cursor:pointer;
   }
 
   .day-list-item{
@@ -219,6 +244,7 @@
 
   .settings-section{border-top:1px solid #eee;padding-top:14px;margin-top:14px;}
   .settings-section h3{font-size:.95rem;margin:0 0 8px;font-weight:900;}
+  .settings-section p.hint{font-size:.78rem;color:#777;margin:4px 0 0;font-weight:700;}
   .weekday-color-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
   .weekday-color-row span{font-weight:800;}
   .weekday-color-row input[type="color"]{
@@ -258,6 +284,7 @@
     position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);
     background:#222;color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;font-size:.85rem;
     z-index:999;opacity:0;transition:.25s;pointer-events:none;
+    max-width:88%;text-align:center;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
@@ -295,6 +322,15 @@
   </main>
 
   <button class="quick-add-btn" id="btnQuickAdd">⚡ 今日だけ速攻追加</button>
+</div>
+
+<!-- ホーム画面追加バナー -->
+<div class="install-banner" id="installBanner" hidden>
+  <div class="install-banner-text">📱 ホーム画面に追加してアプリとして使う</div>
+  <div class="install-banner-actions">
+    <button class="install-btn" id="installBannerBtn">追加する</button>
+    <button class="install-close" id="installBannerClose" aria-label="閉じる">×</button>
+  </div>
 </div>
 
 <!-- 追加モーダル -->
@@ -389,6 +425,12 @@
     </div>
 
     <div class="settings-section">
+      <h3>📱 ホーム画面に追加</h3>
+      <button class="secondary-btn" id="btnInstallFromSettings">ホーム画面に追加する</button>
+      <p class="hint">すでに追加済み、またはお使いの環境によっては表示できない場合があります。</p>
+    </div>
+
+    <div class="settings-section">
       <h3>🔒 パスコードロック</h3>
       <div class="toggle-row">
         <span>ロックを有効にする</span>
@@ -435,6 +477,8 @@
       <p>画面下のボタンから、今日の急な予定だけをすぐに追加できます。</p>
       <h3>📅 予定一覧</h3>
       <p>カレンダーから過去・未来の予定を確認・編集・削除できます。</p>
+      <h3>📱 ホーム画面に追加</h3>
+      <p>ブラウザ表示中に案内が出たときはワンタップで、あとから追加したい場合は設定内のボタンから追加できます。</p>
       <h3>⚙️ 設定</h3>
       <p>曜日ごとの背景色、通知時刻、パスコードロック、データのバックアップができます。</p>
       <h3>🔔 通知について</h3>
@@ -464,10 +508,12 @@ document.addEventListener('DOMContentLoaded', function () {
   var STORAGE_KEY_SCHEDULES = 'dekasuke_schedules_v1';
   var STORAGE_KEY_SETTINGS = 'dekasuke_settings_v1';
   var STORAGE_KEY_FIRED = 'dekasuke_fired_v1';
+  var STORAGE_KEY_INSTALL_DISMISSED = 'dekasuke_install_dismissed_v1';
 
   var memorySchedules = [];
   var memorySettings = null;
   var memoryFired = {};
+  var memoryInstallDismissed = false;
   var storageAvailable = true;
 
   try {
@@ -545,6 +591,17 @@ document.addEventListener('DOMContentLoaded', function () {
     memoryFired = f;
     if (!storageAvailable) return;
     try { window.localStorage.setItem(STORAGE_KEY_FIRED, JSON.stringify(f)); } catch (e) {}
+  }
+
+  function wasInstallDismissed() {
+    if (!storageAvailable) return memoryInstallDismissed;
+    try { return window.localStorage.getItem(STORAGE_KEY_INSTALL_DISMISSED) === '1'; }
+    catch (e) { return memoryInstallDismissed; }
+  }
+  function setInstallDismissed() {
+    memoryInstallDismissed = true;
+    if (!storageAvailable) return;
+    try { window.localStorage.setItem(STORAGE_KEY_INSTALL_DISMISSED, '1'); } catch (e) {}
   }
 
   var schedules = loadSchedules();
@@ -693,8 +750,7 @@ document.addEventListener('DOMContentLoaded', function () {
     calMonth: new Date().getMonth(),
     selectedDate: todayKey(),
     selectedWeekdays: [],
-    editId: null,
-    quickAddOnly: false
+    editId: null
   };
 
   function buildWeekdaySelector() {
@@ -1211,7 +1267,6 @@ document.addEventListener('DOMContentLoaded', function () {
       var todayStr = todayKey(now);
       var wd = now.getDay();
 
-      // 個別予定の事前リマインド
       schedules.forEach(function(s){
         if (!s.start || !s.reminder || s.reminder === 'none') return;
         var isToday = (s.type === 'single' && s.date === todayStr) || (s.type === 'weekly' && s.weekday === wd);
@@ -1230,7 +1285,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
 
-      // 毎朝の定時まとめ通知
       if (settings.dailyReminder && settings.dailyReminder.enabled) {
         var hhmm = pad2(now.getHours()) + ':' + pad2(now.getMinutes());
         var dailyKey = 'daily_' + todayStr;
@@ -1245,6 +1299,78 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     } catch (e) {}
   }
+
+  /* ===================== PWAホーム画面追加バナー ===================== */
+  var deferredInstallPrompt = null;
+
+  function isStandaloneMode() {
+    try {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    } catch (e) { return false; }
+  }
+
+  function showInstallBanner() {
+    var el = document.getElementById('installBanner');
+    if (!el) return;
+    el.hidden = false;
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+  }
+  function hideInstallBanner() {
+    var el = document.getElementById('installBanner');
+    if (!el) return;
+    el.classList.remove('show');
+    setTimeout(function(){ el.hidden = true; }, 350);
+  }
+
+  try {
+    window.addEventListener('beforeinstallprompt', function (e) {
+      try {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        if (!isStandaloneMode() && !wasInstallDismissed()) {
+          showInstallBanner();
+        }
+      } catch (err) {}
+    });
+    window.addEventListener('appinstalled', function () {
+      try {
+        setInstallDismissed();
+        hideInstallBanner();
+        deferredInstallPrompt = null;
+        showToast('ホーム画面に追加しました');
+      } catch (err) {}
+    });
+  } catch (e) {}
+
+  document.getElementById('installBannerClose').addEventListener('click', function () {
+    setInstallDismissed();
+    hideInstallBanner();
+  });
+
+  document.getElementById('installBannerBtn').addEventListener('click', function () {
+    if (!deferredInstallPrompt) { hideInstallBanner(); return; }
+    try {
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(function () {
+        setInstallDismissed();
+        hideInstallBanner();
+        deferredInstallPrompt = null;
+      }).catch(function () { hideInstallBanner(); });
+    } catch (e) { hideInstallBanner(); }
+  });
+
+  document.getElementById('btnInstallFromSettings').addEventListener('click', function () {
+    if (deferredInstallPrompt) {
+      try {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then(function () { deferredInstallPrompt = null; }).catch(function(){});
+      } catch (e) { showToast('インストールを開始できませんでした'); }
+    } else if (isStandaloneMode()) {
+      showToast('すでにホーム画面に追加されています');
+    } else {
+      showToast('この端末・ブラウザでは自動追加に対応していません。ブラウザメニューから追加してください');
+    }
+  });
 
   /* ===================== Service Worker 登録 ===================== */
   try {
@@ -1261,7 +1387,6 @@ document.addEventListener('DOMContentLoaded', function () {
   renderAll();
   checkLock();
 
-  // 日付が変わったら自動で今日の表示を更新
   setInterval(function(){
     renderAll();
   }, 60 * 1000);
@@ -1269,7 +1394,6 @@ document.addEventListener('DOMContentLoaded', function () {
   setInterval(checkReminders, 30 * 1000);
   checkReminders();
 
-  // 通知許可の初期リクエスト（設定でON済みの場合）
   if (settings.dailyReminder && settings.dailyReminder.enabled) {
     requestNotifyPermission();
   }
