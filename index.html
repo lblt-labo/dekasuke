@@ -473,7 +473,7 @@
       <p>アプリを開くと、今日の予定だけが画面いっぱいに表示されます。件数に応じて文字の大きさが自動調整されます。</p>
       <h3>＋ 予定を追加</h3>
       <p>右上の「＋」から、単発の予定（カレンダーで日付指定）か、毎週繰り返す予定（曜日指定）を登録できます。</p>
-      <h3>⚡ 今日だけ速攻追加</h3>
+      <h3>⚡ 今日の予定をすぐ追加</h3>
       <p>画面下のボタンから、今日の急な予定だけをすぐに追加できます。</p>
       <h3>📅 予定一覧</h3>
       <p>カレンダーから過去・未来の予定を確認・編集・削除できます。</p>
@@ -866,7 +866,7 @@ document.addEventListener('DOMContentLoaded', function () {
     addState.selectedDate = todayKey();
     switchTab('single');
     document.getElementById('tabWeekly').hidden = true;
-    document.getElementById('addModalTitle').textContent = '⚡ 今日だけ速攻追加';
+    document.getElementById('addModalTitle').textContent = '⚡ 今日の予定をすぐ追加';
     renderAddCal();
     openModal('modalAdd');
   });
