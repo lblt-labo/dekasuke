@@ -60,8 +60,8 @@
   .date-label{
     font-weight:900;font-size:1.25rem;letter-spacing:.02em;
     display:flex;flex-direction:column;line-height:1.1;
+    overflow-wrap:anywhere;
   }
-  .date-label small{font-weight:700;font-size:.7rem;opacity:.85;}
   .header-icons{display:flex;gap:6px;}
   .icon-btn{
     width:44px;height:44px;border-radius:12px;border:none;
@@ -85,32 +85,44 @@
     padding:10px 18px calc(90px + var(--safe-bottom));
     overflow:hidden;
     position:relative;
+    min-height:0;
   }
   #todayList{
     flex:1;list-style:none;margin:0;padding:0;
     display:flex;flex-direction:column;justify-content:center;gap:0;
     overflow:hidden;
+    min-height:0;
+    width:100%;
   }
   #todayList li{
     display:flex;flex-direction:column;
     padding:.35em 0;
     border-bottom:3px solid rgba(255,255,255,0.25);
+    width:100%;
+    min-width:0;
   }
   #todayList li:last-child{border-bottom:none;}
   .item-time{
     font-weight:800; opacity:.92;
     font-size:var(--item-font-size, 2rem);
-    line-height:1.05;
+    line-height:1.15;
+    word-break:break-all;
+    overflow-wrap:anywhere;
   }
   .item-title{
     font-weight:900;
     font-size:calc(var(--item-font-size, 2rem) * 1.35);
-    line-height:1.05;
-    word-break:break-word;
+    line-height:1.15;
+    word-break:break-all;
+    overflow-wrap:anywhere;
+    hyphens:auto;
   }
   .empty-msg{
     flex:1;display:flex;align-items:center;justify-content:center;
     text-align:center;font-weight:900;font-size:2.2rem;line-height:1.3;
+    word-break:break-all;
+    overflow-wrap:anywhere;
+    padding:0 4px;
   }
 
   .quick-add-btn{
@@ -124,6 +136,10 @@
     font-weight:900;font-size:1.05rem;
     backdrop-filter:blur(4px);
     cursor:pointer;
+    max-width:92%;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
   .quick-add-btn:active{transform:translateX(-50%) scale(0.95);}
 
@@ -177,10 +193,10 @@
   }
   @keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
   .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-  .modal-header h2{font-size:1.15rem;margin:0;font-weight:900;}
+  .modal-header h2{font-size:1.15rem;margin:0;font-weight:900;overflow-wrap:anywhere;}
   .close-btn{
     width:44px;height:44px;border:none;background:#eee;border-radius:10px;
-    font-size:1.2rem;font-weight:900;cursor:pointer;color:#333;
+    font-size:1.2rem;font-weight:900;cursor:pointer;color:#333;flex:0 0 auto;
   }
 
   .tab-row{display:flex;gap:8px;margin-bottom:12px;}
@@ -235,9 +251,9 @@
     display:flex;justify-content:space-between;align-items:center;gap:8px;
     padding:10px;border:2px solid #eee;border-radius:12px;margin-top:8px;
   }
-  .day-list-item .info{font-weight:800;font-size:.92rem;}
+  .day-list-item .info{font-weight:800;font-size:.92rem;overflow-wrap:anywhere;word-break:break-all;min-width:0;}
   .day-list-item .info .t{color:#666;font-size:.78rem;font-weight:700;}
-  .day-list-item .actions{display:flex;gap:6px;}
+  .day-list-item .actions{display:flex;gap:6px;flex:0 0 auto;}
   .day-list-item .actions button{
     width:40px;height:40px;border:none;border-radius:8px;background:#eee;font-size:1rem;cursor:pointer;
   }
@@ -285,11 +301,12 @@
     background:#222;color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;font-size:.85rem;
     z-index:999;opacity:0;transition:.25s;pointer-events:none;
     max-width:88%;text-align:center;
+    word-break:break-all;overflow-wrap:anywhere;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
   .help-content h3{font-size:.95rem;margin:14px 0 4px;font-weight:900;}
-  .help-content p{font-size:.85rem;line-height:1.6;margin:0 0 6px;color:#333;}
+  .help-content p{font-size:.85rem;line-height:1.6;margin:0 0 6px;color:#333;overflow-wrap:anywhere;}
 
   footer p{margin:0 0 .5rem;}
 </style>
@@ -394,7 +411,7 @@
       <button id="listCalNext" aria-label="次の月">▶</button>
     </div>
     <div class="mini-cal-grid" id="listCalGrid"></div>
-    <div id="listDayHeader" style="font-weight:900;margin-top:14px;"></div>
+    <div id="listDayHeader" style="font-weight:900;margin-top:14px;overflow-wrap:anywhere;"></div>
     <div id="listDayItems"></div>
   </div>
 </div>
@@ -470,7 +487,7 @@
     </div>
     <div class="help-content">
       <h3>📌 基本の使い方</h3>
-      <p>アプリを開くと、今日の予定だけが画面いっぱいに表示されます。件数に応じて文字の大きさが自動調整されます。</p>
+      <p>アプリを開くと、今日の予定だけが画面いっぱいに表示されます。件数や文章の長さに応じて文字の大きさが自動調整されます。</p>
       <h3>＋ 予定を追加</h3>
       <p>右上の「＋」から、単発の予定（カレンダーで日付指定）か、毎週繰り返す予定（曜日指定）を登録できます。</p>
       <h3>⚡ 今日の予定をすぐ追加</h3>
@@ -610,7 +627,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* ===================== ユーティリティ ===================== */
   function pad2(n){ return (n < 10 ? '0' : '') + n; }
-  function todayKey(d){ d = d || new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+
+  // 【今日判定の厳格化】常にローカル日時の年/月/日から YYYY-MM-DD 文字列を生成する。
+  // toISOString() 等の UTC 変換は使用しない（タイムゾーンずれによる誤判定を防止）。
+  function todayKey(d){
+    d = d || new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+  }
+
+  // 文字列 YYYY-MM-DD が正しい形式かを検証してから比較に使う
+  function isValidDateStr(str) {
+    return typeof str === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(str);
+  }
+
+  // 厳格な文字列一致比較（前後空白・表記ゆれを吸収してから比較）
+  function isSameDateStrict(a, b) {
+    if (!isValidDateStr(a) || !isValidDateStr(b)) return false;
+    return a.trim() === b.trim();
+  }
+
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 
   function getContrastText(hex) {
@@ -664,14 +699,20 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) {}
   }
 
-  /* ===================== 今日の予定表示 ===================== */
+  /* ===================== 今日の予定表示（判定ロジック厳格化） ===================== */
   function getTodaySchedules() {
     var now = new Date();
-    var key = todayKey(now);
+    var key = todayKey(now); // ローカル日付から生成した YYYY-MM-DD
     var wd = now.getDay();
     var list = schedules.filter(function(s){
-      if (s.type === 'single') return s.date === key;
-      if (s.type === 'weekly') return s.weekday === wd;
+      if (!s || typeof s !== 'object') return false;
+      if (s.type === 'single') {
+        if (!isValidDateStr(s.date)) return false;
+        return isSameDateStrict(s.date, key);
+      }
+      if (s.type === 'weekly') {
+        return typeof s.weekday === 'number' && s.weekday === wd;
+      }
       return false;
     });
     list.sort(function(a,b){
@@ -682,20 +723,36 @@ document.addEventListener('DOMContentLoaded', function () {
     return list;
   }
 
+  /* ===================== デカ文字の自動調整（超重要：はみ出し・切れ防止） ===================== */
   function fitTodayList() {
     var mainEl = document.querySelector('main');
     var list = document.getElementById('todayList');
     if (!mainEl || !list || list.hidden) return;
-    var min = 12, max = 220;
+
+    // まず十分小さいサイズにリセットしてから、収まる最大サイズを二分探索で求める
+    var min = 12, max = 240;
     var container = mainEl;
-    for (var i = 0; i < 16 && max - min > 1; i++) {
-      var mid = Math.floor((min + max) / 2);
-      list.style.setProperty('--item-font-size', mid + 'px');
-      var overflow = list.scrollHeight > container.clientHeight - 10 ||
-                      list.scrollWidth > container.clientWidth - 4;
-      if (overflow) { max = mid; } else { min = mid; }
+
+    function overflows(size) {
+      list.style.setProperty('--item-font-size', size + 'px');
+      // 縦方向のはみ出し
+      if (list.scrollHeight > container.clientHeight - 8) return true;
+      // 横方向のはみ出し（各行ごとにチェック）
+      var lis = list.querySelectorAll('li');
+      for (var i = 0; i < lis.length; i++) {
+        if (lis[i].scrollWidth > container.clientWidth + 1) return true;
+      }
+      return false;
     }
-    list.style.setProperty('--item-font-size', min + 'px');
+
+    for (var i = 0; i < 18 && max - min > 1; i++) {
+      var mid = Math.floor((min + max) / 2);
+      if (overflows(mid)) { max = mid; } else { min = mid; }
+    }
+    // 最終確認：万一 min でも溢れる場合はさらに安全側へ縮小
+    var safe = min;
+    while (safe > 10 && overflows(safe)) { safe -= 2; }
+    list.style.setProperty('--item-font-size', Math.max(safe, 10) + 'px');
   }
 
   function renderToday() {
@@ -725,7 +782,9 @@ document.addEventListener('DOMContentLoaded', function () {
       li.appendChild(titleSpan);
       listEl.appendChild(li);
     });
-    requestAnimationFrame(fitTodayList);
+    requestAnimationFrame(function(){
+      requestAnimationFrame(fitTodayList); // レイアウト確定後に再計算
+    });
   }
 
   function renderDateHeader() {
@@ -741,7 +800,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   window.addEventListener('resize', function(){ requestAnimationFrame(fitTodayList); });
-  window.addEventListener('orientationchange', function(){ setTimeout(fitTodayList, 200); });
+  window.addEventListener('orientationchange', function(){ setTimeout(fitTodayList, 250); });
 
   /* ===================== 追加モーダル：ミニカレンダー ===================== */
   var addState = {
@@ -796,13 +855,13 @@ document.addEventListener('DOMContentLoaded', function () {
       cell.className = 'day';
       var dateStr = year + '-' + pad2(month+1) + '-' + pad2(d);
       var hasSchedule = schedules.some(function(s){
-        if (s.type === 'single') return s.date === dateStr;
+        if (s.type === 'single') return isSameDateStrict(s.date, dateStr);
         if (s.type === 'weekly') return s.weekday === new Date(year, month, d).getDay();
         return false;
       });
       cell.innerHTML = '<span>'+d+'</span>' + (hasSchedule ? '<span class="dot"></span>' : '');
-      if (dateStr === todayStr) cell.classList.add('today');
-      if (dateStr === selectedDate) cell.classList.add('selected');
+      if (isSameDateStrict(dateStr, todayStr)) cell.classList.add('today');
+      if (isSameDateStrict(dateStr, selectedDate)) cell.classList.add('selected');
       cell.addEventListener('click', function(ds){
         return function(){ onPick(ds); };
       }(dateStr));
@@ -863,7 +922,7 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('btnQuickAdd').addEventListener('click', function(){
     resetAddForm();
     addState.mode = 'single';
-    addState.selectedDate = todayKey();
+    addState.selectedDate = todayKey(); // 常に「今日」の日付を厳格に設定
     switchTab('single');
     document.getElementById('tabWeekly').hidden = true;
     document.getElementById('addModalTitle').textContent = '⚡ 今日の予定をすぐ追加';
@@ -884,6 +943,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (addState.mode === 'single') {
+      if (!isValidDateStr(addState.selectedDate)) {
+        showToast('日付が正しく選択されていません');
+        return;
+      }
       schedules.push({
         id: addState.editId || uid(),
         type: 'single',
@@ -923,7 +986,7 @@ document.addEventListener('DOMContentLoaded', function () {
     wrap.innerHTML = '';
 
     var items = schedules.filter(function(s){
-      if (s.type === 'single') return s.date === dateStr;
+      if (s.type === 'single') return isSameDateStrict(s.date, dateStr);
       if (s.type === 'weekly') return s.weekday === wd;
       return false;
     }).sort(function(a,b){ return (a.start||'99:99').localeCompare(b.start||'99:99'); });
@@ -937,14 +1000,31 @@ document.addEventListener('DOMContentLoaded', function () {
       row.className = 'day-list-item';
       var timeText = s.start ? (s.start + (s.end ? '〜'+s.end : '')) : '時間未設定';
       var typeText = s.type === 'weekly' ? '（毎週）' : '';
-      row.innerHTML =
-        '<div class="info"><div class="t">'+timeText+' '+typeText+'</div><div>'+s.title+'</div></div>'+
-        '<div class="actions"><button data-act="edit">✏️</button><button data-act="del">🗑️</button></div>';
-      row.querySelector('[data-act="edit"]').addEventListener('click', function(){
+      var infoDiv = document.createElement('div');
+      infoDiv.className = 'info';
+      var tDiv = document.createElement('div');
+      tDiv.className = 't';
+      tDiv.textContent = timeText + ' ' + typeText;
+      var titleDiv = document.createElement('div');
+      titleDiv.textContent = s.title;
+      infoDiv.appendChild(tDiv);
+      infoDiv.appendChild(titleDiv);
+      var actionsDiv = document.createElement('div');
+      actionsDiv.className = 'actions';
+      var editBtn = document.createElement('button');
+      editBtn.textContent = '✏️';
+      var delBtn = document.createElement('button');
+      delBtn.textContent = '🗑️';
+      actionsDiv.appendChild(editBtn);
+      actionsDiv.appendChild(delBtn);
+      row.appendChild(infoDiv);
+      row.appendChild(actionsDiv);
+
+      editBtn.addEventListener('click', function(){
         closeModal('modalList');
         openEditForm(s);
       });
-      row.querySelector('[data-act="del"]').addEventListener('click', function(){
+      delBtn.addEventListener('click', function(){
         if (window.confirm('この予定を削除しますか？')) {
           schedules = schedules.filter(function(x){ return x.id !== s.id; });
           saveSchedules(schedules);
@@ -1013,7 +1093,8 @@ document.addEventListener('DOMContentLoaded', function () {
     WEEKDAY_JP.forEach(function(label, idx){
       var row = document.createElement('div');
       row.className = 'weekday-color-row';
-      row.innerHTML = '<span>'+label+'曜日</span>';
+      var span = document.createElement('span');
+      span.textContent = label + '曜日';
       var input = document.createElement('input');
       input.type = 'color';
       input.value = settings.weekdayColors[idx] || DEFAULT_COLORS[idx];
@@ -1022,6 +1103,7 @@ document.addEventListener('DOMContentLoaded', function () {
         saveSettings(settings);
         applyTheme();
       });
+      row.appendChild(span);
       row.appendChild(input);
       wrap.appendChild(row);
     });
@@ -1269,7 +1351,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
       schedules.forEach(function(s){
         if (!s.start || !s.reminder || s.reminder === 'none') return;
-        var isToday = (s.type === 'single' && s.date === todayStr) || (s.type === 'weekly' && s.weekday === wd);
+        var isToday = (s.type === 'single' && isSameDateStrict(s.date, todayStr)) ||
+                      (s.type === 'weekly' && s.weekday === wd);
         if (!isToday) return;
         var offsetMin = minutesFromOffset(s.reminder);
         if (offsetMin === null) return;
@@ -1322,6 +1405,8 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function(){ el.hidden = true; }, 350);
   }
 
+  // beforeinstallprompt が発火する環境（主にAndroid Chrome等）でのみバナーを表示。
+  // 非対応環境（iOS Safari等）ではイベント自体が発火しないため、自然にスルーされる。
   try {
     window.addEventListener('beforeinstallprompt', function (e) {
       try {
