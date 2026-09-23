@@ -94,6 +94,8 @@
     min-height:0;
     width:100%;
   }
+  /* 【修正2】hidden属性を確実に効かせる（display指定がhidden属性より優先されてしまう問題を解消） */
+  #todayList[hidden]{display:none;}
   #todayList li{
     display:flex;flex-direction:column;
     padding:.35em 0;
@@ -124,6 +126,8 @@
     overflow-wrap:anywhere;
     padding:0 4px;
   }
+  /* 【修正2】同上：予定ゼロ以外のときは確実に非表示にする */
+  .empty-msg[hidden]{display:none;}
 
   .quick-add-btn{
     position:fixed;left:50%;transform:translateX(-50%);
@@ -628,19 +632,15 @@ document.addEventListener('DOMContentLoaded', function () {
   /* ===================== ユーティリティ ===================== */
   function pad2(n){ return (n < 10 ? '0' : '') + n; }
 
-  // 【今日判定の厳格化】常にローカル日時の年/月/日から YYYY-MM-DD 文字列を生成する。
-  // toISOString() 等の UTC 変換は使用しない（タイムゾーンずれによる誤判定を防止）。
   function todayKey(d){
     d = d || new Date();
     return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
   }
 
-  // 文字列 YYYY-MM-DD が正しい形式かを検証してから比較に使う
   function isValidDateStr(str) {
     return typeof str === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(str);
   }
 
-  // 厳格な文字列一致比較（前後空白・表記ゆれを吸収してから比較）
   function isSameDateStrict(a, b) {
     if (!isValidDateStr(a) || !isValidDateStr(b)) return false;
     return a.trim() === b.trim();
@@ -699,10 +699,10 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) {}
   }
 
-  /* ===================== 今日の予定表示（判定ロジック厳格化） ===================== */
+  /* ===================== 今日の予定表示 ===================== */
   function getTodaySchedules() {
     var now = new Date();
-    var key = todayKey(now); // ローカル日付から生成した YYYY-MM-DD
+    var key = todayKey(now);
     var wd = now.getDay();
     var list = schedules.filter(function(s){
       if (!s || typeof s !== 'object') return false;
@@ -723,33 +723,30 @@ document.addEventListener('DOMContentLoaded', function () {
     return list;
   }
 
-  /* ===================== デカ文字の自動調整（超重要：はみ出し・切れ防止） ===================== */
+  /* ===================== 【修正1】デカ文字の自動調整 ===================== */
+  /* #todayList 自身の実際のボックスサイズ（clientHeight/clientWidth）を基準に
+     二分探索することで、余白を含む main 要素基準で計算していた際に発生していた
+     「実際より広く見積もられてオーバーサイズになり、画面からはみ出て切れる」不具合を解消 */
   function fitTodayList() {
-    var mainEl = document.querySelector('main');
     var list = document.getElementById('todayList');
-    if (!mainEl || !list || list.hidden) return;
+    if (!list || list.hidden) return;
 
-    // まず十分小さいサイズにリセットしてから、収まる最大サイズを二分探索で求める
     var min = 12, max = 240;
-    var container = mainEl;
 
     function overflows(size) {
       list.style.setProperty('--item-font-size', size + 'px');
-      // 縦方向のはみ出し
-      if (list.scrollHeight > container.clientHeight - 8) return true;
-      // 横方向のはみ出し（各行ごとにチェック）
+      if (list.scrollHeight > list.clientHeight + 1) return true;
       var lis = list.querySelectorAll('li');
       for (var i = 0; i < lis.length; i++) {
-        if (lis[i].scrollWidth > container.clientWidth + 1) return true;
+        if (lis[i].scrollWidth > list.clientWidth + 1) return true;
       }
       return false;
     }
 
-    for (var i = 0; i < 18 && max - min > 1; i++) {
+    for (var i = 0; i < 20 && max - min > 1; i++) {
       var mid = Math.floor((min + max) / 2);
       if (overflows(mid)) { max = mid; } else { min = mid; }
     }
-    // 最終確認：万一 min でも溢れる場合はさらに安全側へ縮小
     var safe = min;
     while (safe > 10 && overflows(safe)) { safe -= 2; }
     list.style.setProperty('--item-font-size', Math.max(safe, 10) + 'px');
@@ -783,7 +780,7 @@ document.addEventListener('DOMContentLoaded', function () {
       listEl.appendChild(li);
     });
     requestAnimationFrame(function(){
-      requestAnimationFrame(fitTodayList); // レイアウト確定後に再計算
+      requestAnimationFrame(fitTodayList);
     });
   }
 
@@ -922,7 +919,7 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('btnQuickAdd').addEventListener('click', function(){
     resetAddForm();
     addState.mode = 'single';
-    addState.selectedDate = todayKey(); // 常に「今日」の日付を厳格に設定
+    addState.selectedDate = todayKey();
     switchTab('single');
     document.getElementById('tabWeekly').hidden = true;
     document.getElementById('addModalTitle').textContent = '⚡ 今日の予定をすぐ追加';
@@ -1219,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('passcodeToggle').addEventListener('change', function(e){
     if (e.target.checked) {
       startPasscodeSetup();
-      e.target.checked = false; // 設定完了時に true にする
+      e.target.checked = false;
     } else {
       settings.passcode.enabled = false;
       settings.passcode.code = null;
@@ -1405,8 +1402,6 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function(){ el.hidden = true; }, 350);
   }
 
-  // beforeinstallprompt が発火する環境（主にAndroid Chrome等）でのみバナーを表示。
-  // 非対応環境（iOS Safari等）ではイベント自体が発火しないため、自然にスルーされる。
   try {
     window.addEventListener('beforeinstallprompt', function (e) {
       try {
